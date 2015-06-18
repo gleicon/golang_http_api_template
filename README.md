@@ -10,7 +10,7 @@ Prerequisites:
 - Git
 - rsync
 - GNU Make
-- [Go](http://golang.org) 1.0.3 or newer
+- [Go](http://golang.org) 1.4 or newer
 
 First, you should make a copy of this directory, and prepare the new project:
 

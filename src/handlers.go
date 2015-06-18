@@ -7,19 +7,16 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
-
-	"github.com/gorilla/handlers"
 )
 
 func (s *httpServer) route() {
 	// Static file server.
-	http.Handle("/static/", handlers.CombinedLoggingHandler(os.Stdout, http.FileServer(http.Dir(s.config.DocumentRoot))))
+	s.WrapLogHandler("/static/", http.FileServer(http.Dir(s.config.DocumentRoot)))
 
 	// Other handlers.
-	http.Handle("/", handlers.CombinedLoggingHandler(os.Stdout, http.HandlerFunc(s.indexHandler)))
-	http.Handle("/test", handlers.CombinedLoggingHandler(os.Stdout, http.HandlerFunc(s.testHandler)))
-	http.Handle("/api/v1/echo", handlers.CombinedLoggingHandler(os.Stdout, http.HandlerFunc(s.echoHandler)))
+	s.WrapLogHandlerFunc("/", s.indexHandler)
+	s.WrapLogHandlerFunc("/test", s.testHandler)
+	s.WrapLogHandlerFunc("/api/v1/echo", s.echoHandler)
 }
 
 func (s *httpServer) indexHandler(w http.ResponseWriter, r *http.Request) {

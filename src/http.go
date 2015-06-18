@@ -8,20 +8,24 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/fiorix/go-redis/redis"
+	"github.com/gorilla/handlers"
 )
 
 type httpServer struct {
-	config *configFile
-	redis  *redis.Client
-	mysql  *sql.DB
+	config    *configFile
+	redis     *redis.Client
+	mysql     *sql.DB
+	logStream *os.File
 }
 
-func (s *httpServer) init(cf *configFile, rc *redis.Client, db *sql.DB) {
+func (s *httpServer) init(cf *configFile, rc *redis.Client, db *sql.DB, ls *os.File) {
 	s.config = cf
 	s.redis = rc
 	s.mysql = db
+	s.logStream = ls
 
 	// Initialize http handlers.
 	s.route()
@@ -50,4 +54,12 @@ func (s *httpServer) ListenAndServeTLS() {
 		s.config.HTTPS.CertFile,
 		s.config.HTTPS.KeyFile,
 	))
+}
+
+func (s *httpServer) WrapLogHandlerFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
+	http.Handle(pattern, handlers.CombinedLoggingHandler(s.logStream, http.HandlerFunc(handler)))
+}
+
+func (s *httpServer) WrapLogHandler(pattern string, handler http.Handler) {
+	http.Handle(pattern, handlers.CombinedLoggingHandler(s.logStream, handler))
 }
